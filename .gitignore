@@ -1,0 +1,27 @@
+# Secrets: never committed (decision D-004)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+
+# Build output
+build/
+dist/
+node_modules/
+__pycache__/
+.venv/
+
+# KiCad local state and backups
+*-backups/
+fp-info-cache
+*.kicad_prl
+_autosave-*
+~*.lck
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
