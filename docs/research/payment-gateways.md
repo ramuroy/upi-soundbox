@@ -19,6 +19,13 @@ Notes on sources:
 
 ## 1. Short answer
 
+> **Status, 3 October 2026: the Razorpay recommendation below is on hold.**
+> - A fresh Razorpay test account does not have the QR Codes product, so it cannot support development (section 10).
+> - The owner should not open a live merchant account just for this project (decision D-012 in [`../decisions.md`](../decisions.md)).
+>
+> The comparison below is still accurate. The next step is to find a sandbox that offers per-sale UPI QR codes without merchant KYC.
+
+
 **Apply to Razorpay first.** It is the only gateway found that meets all four needs:
 - (a) It documents self-serve onboarding for an "Individual / Unregistered" business with PAN, Aadhaar and a bank account.
 - (b) It lets you skip the website at sign-up.
@@ -484,6 +491,10 @@ There are two catches:
 
 ### What the owner should have ready for Razorpay KYC
 
+> **On hold (D-012).** Do not start KYC for this project.
+> - If a live account is ever opened, its business description must be literally true. "Collects payments in person at a counter" is true only for a real shop.
+> - The checklist below is kept for that case, for example a shop owner opening an account for a pilot.
+
 Sources: https://razorpay.com/docs/payments/business-types-kyc-documents/ and https://razorpay.com/docs/payments/set-up/
 
 - Personal **PAN**, with the name exactly as on the bank account.
@@ -589,3 +600,18 @@ This changes the Razorpay plan, because the original plan assumed test mode woul
 - The account-purpose problem compounds this. A live merchant account must describe a real business, so the owner should not do KYC just to unlock a feature for a project.
 
 **Next step:** find a gateway whose sandbox gives a dynamic UPI QR (raw string), a simulated payment and a signed notification without merchant KYC. The candidates to check first are Setu (sandbox mock-credit trigger, section 3.8), Cashfree, PhonePe and Decentro. In parallel, ask Razorpay support the question above.
+
+**Razorpay pricing, re-checked 2026-10-03** (https://razorpay.com/pricing/ and https://razorpay.com/terms/90-day-free-pg-offer/):
+
+| Item | Amount |
+|---|---|
+| Setup fee | ₹0 |
+| Annual maintenance | ₹0 |
+| Monthly fee | None |
+| Fees on payments | Deducted from each payment before settlement |
+| "UPI QR (standard)" | **0.99%** per transaction |
+| "Platform fee (all domestic instruments)" | **2%** per transaction. This line appears alongside the 0.99% line, and which one applies to QR Codes payments is **UNVERIFIED**. |
+| GST on fees | 18% |
+| KYC processing | ₹199 + tax, "subject to verification" |
+| Offer | 0% platform fee for 90 days or ₹5 lakh, for accounts activated from 1 Jul 2026, one per PAN. QR Codes are not listed as excluded. |
+| Test mode | Free. No KYC and no money involved. |
