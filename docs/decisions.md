@@ -74,3 +74,89 @@ that string on its own screen.
 
 **Open:** whether the chosen gateway returns the raw string or only an image. This is part of the
 gateway research in [`research/payment-gateways.md`](research/payment-gateways.md).
+
+## D-006 · Razorpay is the payment gateway
+
+*2 October 2026 · decided by the owner*
+
+The owner signs up with Razorpay as "Individual / Unregistered", then asks support to enable QR
+Codes and the `qr_image_content` flag. The backend creates single-use, fixed-amount `upi_qr` codes
+and confirms payment only through the signed `qr_code.credited` webhook.
+
+**Why:** Razorpay is the only gateway whose own documentation shows all of these together:
+- individual onboarding, with the website step skippable
+- single-use, fixed-amount UPI QR codes
+- the raw `upi://` string
+- HMAC-SHA256 signed webhooks
+- RBI authorisation for in-person payments
+
+See [`research/payment-gateways.md`](research/payment-gateways.md).
+
+**Given up:** test-mode QR codes can't be scanned, so the first full test is a live ₹1 payment.
+
+**Fallback:** if Razorpay refuses the QR features, register on Udyam and apply to PhonePe Offline
+Dynamic QR or PayU DBQR. Both return the raw string.
+
+## D-007 · No battery
+
+*2 October 2026 · decided by the owner*
+
+The board has no lithium cell. For power cuts, the device runs from any 5 V USB-C source, such as
+a power bank or the USB port of a router mini-UPS that also keeps the Wi-Fi up.
+
+**Why:** when mains fails, the shop's router usually fails too, so a battery in the device alone
+can't take payments. Leaving it out saves 12–20 parts, a BIS-certified cell, a charger that must
+stop charging above 45 °C, and the only fire risk the product would otherwise have.
+
+## D-008 · On weak USB power, run limited and warn
+
+*2 October 2026 · decided by the owner*
+
+The firmware reads the CC pins. If the source advertises only Default USB power (500 mA), as an old
+USB-A charger with an A-to-C cable does, the device keeps working with the backlight dimmed and
+the volume capped. It shows "Use a 5 V USB-C adapter for full volume".
+
+**Why:** nobody is locked out, and the warning steers them towards the right adapter.
+
+**Given up:** Wi-Fi transmit peaks may briefly exceed 500 mA on such a source. The reset
+supervisor (TLV809E) handles any brownout cleanly.
+
+## D-009 · The ESP32-S3's on-chip watchdogs count as hardware watchdogs
+
+*2 October 2026 · decided by the owner*
+
+There is no separate watchdog chip. The chip's own watchdog timers (one RTC watchdog and two main
+system watchdogs) reset the system if the firmware hangs.
+
+**Firmware rule:** the firmware never disables them, and the bootloader watchdog stays on.
+
+**Why:** these timers run independently of the CPU. The dangerous firmware faults are already
+contained by other hardware:
+- the eFuse limits current
+- the speaker survives the amplifier's worst DC output
+- the amplifier switches itself off whenever the MCU resets
+
+A hang costs only availability, and the watchdog recovers it.
+
+## D-010 · 66 mm speaker
+
+*2 October 2026 · settled by the owner's rule "reliability first"*
+
+The speaker is the PUI AS06608PS-R (66 mm, 8 Ω, 5 W maximum).
+
+**Why:** if the firmware fails, the amplifier can put up to 4.45 W of DC or square wave into the
+speaker. The 66 mm speaker survives that. The 40 mm alternative is rated 4 W maximum and would not.
+
+**Given up:** a bigger, heavier case (204 g speaker).
+
+## D-011 · Keep ESD protection on the keypad
+
+*2 October 2026 · settled by the owner's rule "reliability first"*
+
+Two TPD4E05U06 arrays protect the keypad rows and columns, in addition to the switches' ground
+terminals.
+
+**Why:** the ESP32's pins are rated for only 2 kV of static (human-body model), and Omron gives no
+static rating for the switches' ground terminal. Paper can't close that risk without the arrays.
+
+**Given up:** two extra parts.
