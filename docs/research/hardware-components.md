@@ -54,19 +54,18 @@ Every part in this table is in stock at DigiKey India on 2026-10-02 (Section 9).
 - **Flash.** English plus Hindi number words at 16 kHz / 16-bit is about 120 s, or about 3.8 MB of PCM. A/B audio partitions plus two 3 MB app slots fit in 16 MB.
 - **Speaker level.** About 89 ±3 dBA at 1 m per watt. The amplifier gives about 1.4 W **typ** into 8 Ω at 5 V (1 % THD+N), which is enough over typical shop noise.
 
-### 0.3 Owner decisions needed
+### 0.3 Owner decisions (resolved 2026-10-02)
 
-1. **Battery backup.** Recommendation: no Li-ion inside, use an external power bank or router mini-UPS (Section 6).
-2. **Adapter policy.** Should the device refuse full volume and brightness on a "Default USB power" source, as the USB-C spec requires, or run anyway?
-3. **Keypad and spills.**
-   - The recommended Omron sealed switches need 16 holes in the case top, so a spill can reach the PCB around the key tops. Section 4 proposes a raised keypad island with a drip gutter.
-   - The only sealed-overlay alternative found with a datasheet (Grayhill 88) is ₹8 246, carries hex legends, and is rated only IP42.
-   - A custom silicone-rubber keypad would remove the holes but is a custom part.
-4. **Speaker size.** 66 mm / 204 g (loud) or 40 mm (about 9 dB quieter, much smaller).
-5. **Keypad ESD arrays** (2 × TPD4E05U06). Recommended.
-   - The B3W-4150's ground terminal gives static a path to GND, but Omron states no IEC kV rating for it.
-   - Paper therefore cannot close the risk, and the arrays stay unless the owner accepts that risk.
-6. **External watchdog.** Not recommended (Section 7.3). The owner rule says watchdogs stay in hardware, so please confirm that the on-chip hardware RWDT is acceptable.
+Each of these was an open question in the first draft. The outcomes are recorded in [`../decisions.md`](../decisions.md).
+
+| # | Question | Outcome | Decision |
+|---|---|---|---|
+| 1 | Battery backup | **No battery.** Run from any 5 V USB-C source: a power bank, or a router mini-UPS that also keeps the Wi-Fi up (Section 6). | D-007 |
+| 2 | Behaviour on a "Default USB power" (500 mA) source | **Run limited and warn:** backlight dimmed, volume capped, message "Use a 5 V USB-C adapter for full volume" (Section 5.7). | D-008 |
+| 3 | Keypad spill path through 16 key holes | **Handled in the case design:** raised key island, drip gutter, tight cap-to-hole clearance. Conformal coating of the keypad zone is decided at case design. The Grayhill sealed overlay stays rejected: IP42, hex legends, ₹8 246. | D-016 |
+| 4 | Speaker size | **66 mm AS06608PS-R.** It is the only option that survives the amplifier's 4.45 W worst-case fault; the 40 mm alternative is rated 4 W max. | D-010 |
+| 5 | Keypad ESD arrays | **Kept** (2 × TPD4E05U06). Omron gives no IEC rating for the switch ground terminal. | D-011 |
+| 6 | External watchdog | **None.** The ESP32-S3's on-chip RWDT and MWDTs count as the hardware watchdog; firmware must never disable them. | D-009 |
 
 ---
 
@@ -608,7 +607,7 @@ Source: USB Type-C Cable and Connector Specification Release 2.0, Aug 2019. http
 
 | Source advertisement | Allowed draw | Device behaviour (firmware reads CC) |
 |---|---|---|
-| Default USB (56 kΩ Rp; any USB-A port or **A-to-C cable**) | 500 mA (p.218) | Cannot be guaranteed: Wi-Fi alone needs up to about 0.45 A at 5 V. **Owner decision:** refuse ("use a 5 V USB-C adapter") or run with volume and backlight capped, which is not spec-compliant at TX peaks. |
+| Default USB (56 kΩ Rp; any USB-A port or **A-to-C cable**) | 500 mA (p.218) | Cannot be guaranteed: Wi-Fi alone needs up to about 0.45 A at 5 V. **Decided (D-008):** run with volume and backlight capped and show "Use a 5 V USB-C adapter for full volume". Wi-Fi TX peaks may briefly exceed 500 mA; the TLV809E handles any brownout cleanly. |
 | 1.5 A (22 kΩ) | 1.5 A | Full function. Worst-case 1.40 A fits. |
 | 3.0 A (10 kΩ) | 3 A | Full function |
 
@@ -617,7 +616,7 @@ Source: USB Type-C Cable and Connector Specification Release 2.0, Aug 2019. http
 
 ---
 
-## 6. Battery backup (owner's decision)
+## 6. Battery backup (decided: none, D-007)
 
 **What it would take:**
 
@@ -815,13 +814,13 @@ Prices are INR per piece before GST, read from each vendor's product page. LCSC 
 ## 10. Risks and open questions
 
 1. **QR payload length.** The display choice assumes ≤ 192 bytes (V8 at EC L). PhonePe-style strings over 300 bytes would drop modules to 0.54 mm (about 30 cm scan range). The backend must log the real length once Razorpay `image_content` is enabled.
-2. **USB "Default" power sources.** The A-to-C cable case. Owner policy is needed (5.7).
+2. **USB "Default" power sources.** The A-to-C cable case. Decided: run limited and warn (D-008, 5.7).
 3. **NHD backlight maximum current** is not stated, and the pin table and electrical table disagree (100 vs 160 mA). Ask Newhaven.
 4. **MAX98357A output power is typical only.** Loudness margin rests on typical amp power and the speaker's ±3 dB tolerance.
 5. **Speaker operating limit is 50 °C.** It is also heavy (204 g), so the case needs a solid mount.
 6. **VBUS ESD** relies on capacitor charge absorption, which is a calculation, not a datasheet guarantee. It must be confirmed at EMC test. The alternative is TPS25947 + TVS2200 (22 V flat-clamp, 28.4 V max at 40 A), sized for a 28 V-abs-max eFuse.
 7. **Leadless packages** need reflow assembly.
-8. **Keypad spill path.** 16 key holes in the case top (Section 4). Case drip-island design and an optional conformal coat are the owner's call.
+8. **Keypad spill path.** 16 key holes in the case top (Section 4). This is handled in the case design (D-016): drip island and gutter. Whether to conformal-coat is decided then.
 9. **Stock and lead times.** The panel (441 pcs, 18-week lead) and the speaker (30-week lead) are single-source at DigiKey India. The N16 module is at DigiKey and LCSC but not at Evelta. If only the N16R8 can be had, enable PSRAM ECC to keep the 85 °C rating, and lose GPIO35–37.
 10. **Antenna** needs ≥ 15 mm clearance from the speaker magnet, the display frame and the case walls. Plan the case around it.
 11. **FPC orientation.** The Molex 54132-4062 is bottom-contact (DigiKey), and the NHD contacts are on the panel's back face. The FPC path must present that face to the PCB (2.5).
