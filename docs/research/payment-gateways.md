@@ -563,3 +563,29 @@ Sources: https://razorpay.com/docs/payments/business-types-kyc-documents/ and ht
 [dec-link]: https://docs.decentro.tech/reference/payments_api-collectionsv3-paymentlink
 [pl-upi]: https://www.pinelabs.com/docs/online-payments/use-cases/accept-payments-upi
 [gpay]: https://developers.google.com/pay/india/api/web/create-payment-method
+
+---
+
+## 10. Update 2026-10-03: QR Codes is not available on a plain test-mode account
+
+This changes the Razorpay plan, because the original plan assumed test mode would cover development.
+
+**Evidence from developers who tried it, first-hand logs:**
+
+- **PunarArjan, decision D0021, August 2026.** On a fresh Razorpay test account:
+  - `POST /v1/payments/qr_codes`, and even a plain list call, returned `400 BAD_REQUEST_ERROR: "The requested URL was not found on the server"`.
+  - The same keys created an Order seconds later. The project concluded that QR Codes "is not provisioned on this account".
+  - UPI was not offered as a payment method on that test account either.
+  - Source: https://github.com/divyanshi-sachan/PunarArjan/blob/f7daf964615e69364aaa37c47110e3da8f262c16/docs/decisions.md
+- **dukaan-mcp, issue 0005, August 2026.** The only documented server-side way to simulate a payment is `POST /v1/bharatqr/pay/test`, and "BharatQR itself needs a support ticket to activate".
+  - The same note says UPI Payment Links are not supported in test mode, and UPI Collect (`success@razorpay`) was deprecated on 28 Feb 2026.
+  - Source: https://github.com/dharminnagar/dukaan-mcp/blob/9f4714152c8bc85cd6222179f569054355f857d8/.projectmem/issues/0005-blocker-a-headless-agent-cannot-authorize-a-paym.md
+- **Razorpay's own FAQ:** QR codes created in test mode cannot be scanned (section 3.1).
+
+**Consequences:**
+
+- With a fresh, un-activated account, our core flow cannot be developed or demonstrated: create a per-sale `upi_qr`, get the raw string, simulate the payment, receive `qr_code.credited`.
+- Whether Razorpay support will enable QR Codes, `qr_image_content` and BharatQR test-pay on a test-only account without KYC: **UNVERIFIED**. Ask them before relying on it.
+- The account-purpose problem compounds this. A live merchant account must describe a real business, so the owner should not do KYC just to unlock a feature for a project.
+
+**Next step:** find a gateway whose sandbox gives a dynamic UPI QR (raw string), a simulated payment and a signed notification without merchant KYC. The candidates to check first are Setu (sandbox mock-credit trigger, section 3.8), Cashfree, PhonePe and Decentro. In parallel, ask Razorpay support the question above.
